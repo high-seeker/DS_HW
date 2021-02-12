@@ -1,3 +1,5 @@
+import time
+
 import scrapy
 from scrapy import Request
 from scrapy.crawler import CrawlerProcess
@@ -85,6 +87,8 @@ class HabrNewsSpider(scrapy.Spider):
 
 
     def parse_author(self, response, news_id, title, author, comments_counter, hubs, tags, text_conc):
+
+        # TO DO - Почему-то проходит только один раз по одному автору!
 
         author_karma = response.css('a.user-info__stats-item').css('div.stacked-counter__value::text')[0].root.strip()
         author_rating = response.css('a.stacked-counter_rating').css('div.stacked-counter__value::text')[0].root.strip()

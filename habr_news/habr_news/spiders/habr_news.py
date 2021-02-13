@@ -1,5 +1,3 @@
-import time
-
 import scrapy
 from scrapy import Request
 from scrapy.crawler import CrawlerProcess
@@ -23,76 +21,54 @@ class HabrNewsSpider(scrapy.Spider):
     start_urls = ['https://habr.com/ru/news/']
 
     def parse(self, response):
-        for news in response.css('li.content-list__item_post'):
 
-            try:
-                news_id = news.attrib['id']
-            except:
-                continue
-            if news_id == 'effect':
-               continue
-
-            title = news.css('a.post__title_link::text')[0].root.strip()
-            author = news.css('span.user-info__nickname::text')[0].root.strip()
-
-            try:
-                comments_counter = news.css('span.post-stats__comments-count::text')[0].root.strip()
-            except:
-                comments_counter = 0
-
-            hubs = []
-            for hubs_i in news.css('a.inline-list__item-link::text'):
-                hubs.append(hubs_i.root.strip())
-
-            text_conc = ''
-            for text_i in news.css('div.post__text-html').css('p::text'):
-                text_conc = text_conc + text_i.root.strip()
-
-            mainpage = response.css('a.post__habracut-btn::attr(href)')[0].root.strip()
-
-            yield Request(mainpage, callback=self.parse_main,
-                          cb_kwargs=dict(news_id=news_id,
-                                         title=title,
-                                         author=author,
-                                         comments_counter=comments_counter,
-                                         hubs=hubs,
-                                         text_conc=text_conc))
+        for news_link in response.xpath("//a[@class='post__title_link']/@href").getall():
+            yield Request(news_link, callback=self.parse_main)
 
         next_page = response.css('a.arrows-pagination__item-link_next::attr(href)')
         if len(next_page) > 0:
             yield Request('https://habr.com' + next_page[0].root.strip(),
                           callback=self.parse)
 
-    def parse_main(self, response, news_id, title, author, comments_counter, hubs, text_conc):
+    def parse_main(self, response):
+
+        news_id = response.css('article.post_full')[0].attrib['id']
+        title = response.css('span.post__title-text::text')[0].root.strip()
+
+        hubs = []
+        for hubs_i in response.css('a.inline-list__item-link::text'):
+            hubs.append(hubs_i.root.strip())
 
         tags = []
-        for hubs_i in response.css('ul.js-post-tags').css('a.post__tag::text'):
-            tags.append(hubs_i.root.strip())
+        for tags_i in response.css('ul.js-post-tags').css('a.post__tag::text'):
+            tags.append(tags_i.root.strip())
 
-        # TO DO - Разобраться с непечатными символами!
-        #text_conc = ''
-        #for text_i in response.css('div.post__text_v2').css('p::text'):
-        #    text_conc = text_conc + text_i.root.strip()
+        text = []
+        for text_part in response.xpath("//div[@class='post__body post__body_full']"
+                                        "/descendant-or-self::*/text()").getall():
+            text.append(text_part.strip())
 
-        author_link = response.css('a.post__user-info::attr(href)')[0].root.strip()
+        author = response.css('span.user-info__nickname::text')[0].root.strip()
 
-        yield Request(author_link, callback=self.parse_author,
-                          cb_kwargs=dict(news_id=news_id,
-                                         title=title,
-                                         author=author,
-                                         comments_counter=comments_counter,
-                                         hubs=hubs,
-                                         tags=tags,
-                                         text_conc=text_conc))
+        try:
+            author_karma = response.css('a.user-info__stats-item').css('div.stacked-counter__value::text')[0].root.strip()
+        except:
+            author_karma = 0
 
+        try:
+            author_rating = response.css('a.stacked-counter_rating').css('div.stacked-counter__value::text')[0].root.strip()
+        except:
+            author_rating = 0
 
-    def parse_author(self, response, news_id, title, author, comments_counter, hubs, tags, text_conc):
+        try:
+            author_specialization = response.css('div.user-info__specialization::text')[0].root.strip()
+        except:
+            author_specialization = ""
 
-        # TO DO - Почему-то проходит только один раз по одному автору!
-
-        author_karma = response.css('a.user-info__stats-item').css('div.stacked-counter__value::text')[0].root.strip()
-        author_rating = response.css('a.stacked-counter_rating').css('div.stacked-counter__value::text')[0].root.strip()
-        author_specialization = response.css('div.user-info__specialization::text')[0].root.strip()
+        try:
+            comments_counter = response.css('span.post-stats__comments-count::text')[0].root.strip()
+        except:
+            comments_counter = 0
 
         item = HabrNews()
 
@@ -103,10 +79,10 @@ class HabrNewsSpider(scrapy.Spider):
 
         item['news_id'] = news_id.replace("post_", "")
         item['title'] = title
-        item['comments_counter'] = comments_counter
+        item['comments_counter'] = str(comments_counter).replace("&plus;","")
         item['hubs'] = hubs
         item['tags'] = tags
-        item['text'] = text_conc
+        item['text'] = text
 
         yield item
 

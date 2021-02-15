@@ -24,7 +24,7 @@ print(f"collection: {collection}\n")
 # ------Добавление------------------------------------------------------------------------------------------------------
 
 # загрузить json полученный в результате работы scrapy
-with open('./habr_news/habr_news.json') as json_file:
+with open('habr_news.json') as json_file:
     habr_news = json.load(json_file)
 
 # добавить все данные из json в mongodb

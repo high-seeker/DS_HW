@@ -46,8 +46,8 @@ print(f"db.habr_news_collection.count_documents({{}}): {db.habr_news_collection.
 print(f"db.list_collection_names(): {db.list_collection_names()}\n")
 
 # получить один любой документ из коллекции
-print(f"db.list_collection_names.find_one():\n"
-      f"{pprint.pformat(db.list_collection_names.find_one())}\n")
+print(f"db.habr_news_collection.find_one():\n"
+      f"{pprint.pformat(db.habr_news_collection.find_one())}\n")
 
 # получить один документ из коллекции удовлетворяющий условию {'news_id': 529690}
 print(f"db.habr_news_collection.find_one({{'name': Авито}}):\n"
@@ -56,12 +56,12 @@ print(f"db.habr_news_collection.find_one({{'name': Авито}}):\n"
 # получить все документы из коллекции удовлетворяющие условию {'comments_counter': 3} + сортировка по 'news_id'
 print(f"db.habr_news_collection.find({{'comments_counter': 3}}):")
 for doc in db.habr_news_collection.find({'comments_counter': 3}).sort("news_id"):
-    print(f"name: {doc['name']}\tinfo: {doc['info']}")
+    print(f"id: {doc['_id']}\ttitle: {doc['title']}")
 
 # получить все документы из коллекции удовлетворяющие условию {'author': 'avouner'}
 print(f"\ndb.habr_news_collection.find({{'author': 'avouner'}}):")
 for doc in db.habr_news_collection.find({'author': 'avouner'}):
-    print(f"name: {doc['name']}\tinfo: {doc['info']}")
+    print(f"id: {doc['_id']}\tauthor: {doc['author']}")
 
 # получить количество документов из коллекции поле tags которых содержит `Научно-популярное` (другие теги тоже допустимы)
 print(f"\ndb.habr_news_collection.count_documents({{'tags': {{'$all': ['Научно-популярное']}}}}): "
@@ -72,7 +72,7 @@ print(f"\ndb.habr_news_collection.count_documents({{'tags': {{'$all': ['Науч
 # установить в качестве `author` имя `MONGO`
 # во всех документах удовлетворяющие условию {'hubs': {'$all': ['Астрономия']}}
 # и получить количество обновленных
-update_many_result = db.habr_news_collection.update_many({'tags': {'$all': ['Астрономия']}},
+update_many_result = db.habr_news_collection.update_many({'hubs': {'$all': ['Астрономия']}},
                                                               {'$set': {'author': 'MONGO'}})
 print(f"\ndb.habr_news_collection.update_many({{'tags': {{'$all': ['Астрономия']}}}},"
       f"{{'$set': {{'author': 'MONGO'}}}}:")

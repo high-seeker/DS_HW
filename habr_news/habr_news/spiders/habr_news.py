@@ -73,13 +73,13 @@ class HabrNewsSpider(scrapy.Spider):
         item = HabrNews()
 
         item['author'] = author
-        item['author_karma'] = author_karma
-        item['author_rating'] = author_rating
+        item['author_karma'] = float(str(author_karma).replace(",", ".").replace("–", ""))
+        item['author_rating'] = float(str(author_rating).replace(",", ".").replace("–", ""))
         item['author_specialization'] = author_specialization
 
         item['news_id'] = news_id.replace("post_", "")
         item['title'] = title
-        item['comments_counter'] = str(comments_counter).replace("&plus;","")
+        item['comments_counter'] = int(str(comments_counter).replace("&plus;",""))
         item['hubs'] = hubs
         item['tags'] = tags
         item['text'] = text
